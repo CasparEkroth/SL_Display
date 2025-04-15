@@ -47,6 +47,39 @@ function getTime(){
 }
 
 
-const SITE_ID = "3065";//träkvista
-displayingData(SITE_ID)
+//const SITE_ID = "3065";//träkvista
+//displayingData(SITE_ID)
 myH1.textContent = "Träkvista";
+
+const csvUrl = 'https://raw.githubusercontent.com/thuma/StorstockholmsLokaltrafikAPI/master/sl.csv';
+const newUrl = 'https://raw.githubusercontent.com/thuma/StorstockholmsLokaltrafikAPI/master/sl.csv'
+
+async function createJsonFromCSV(url){
+    try {
+        const response = await fetch(url);
+        const csvText = await response.text();
+        const lines = csvText.split('\n').filter(line => line.trim() !== '');
+        const jsonData = lines.map(line => {
+            const fields = line.split(';');
+            return {
+                name: fields[0],
+                lat: fields[1],
+                lon: fields[2],
+                sa: fields[3],
+                id: fields[4],
+                gtfsid: fields[5],
+                fullName: fields[6],
+                lat: parseFloat(fields[7]),
+                lng: parseFloat(fields[8])
+            };
+        });
+        console.log(JSON.stringify(jsonData, null, 2));
+        return jsonData;
+    } catch (error) {
+        console.error('Error fetching or processing CSV:', error);
+    }
+}
+
+createJsonFromCSV(csvUrl)
+
+
