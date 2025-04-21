@@ -88,23 +88,22 @@ createJsonFromCSV(csvUrl)
         console.error("Error loading CSV data:", error);
     });
 
-function refresh(){
+async function refresh(){
     const input = document.getElementById('searchInput').value;
-    myH1.textContent = input;
+    
     const index = dataForID.findIndex(item => item.name.toLowerCase() === input.toLowerCase());
     if(index !== -1){
+        myH1.textContent = input;
         console.log(`found at ${index} and the station id is ${dataForID[index].id}`);
-        //fetchDepartures(dataForID[index].id)
-        //    .then(info => {
-        //        let selectedStop = info;
-        //        console.log(selectedStop.name)
-        //    });
+        document.querySelectorAll('p').forEach(p => {
+            p.classList.remove('hidden');
+        });
         displayingData(dataForID[index].id);
     }else{
         console.log("not found");
+        myH1.textContent = `can't find ${input}`;
+        document.querySelectorAll('p').forEach(p => {
+            p.classList.add('hidden');
+        });
     }
 }
-
-
-
-

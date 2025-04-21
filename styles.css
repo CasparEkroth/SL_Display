@@ -23,3 +23,9 @@ p{
     margin-top: 50px;
     color: red;
 }
+.hidden{
+    display: none;
+}
+.visible{
+    display: block;  
+}
