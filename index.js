@@ -47,6 +47,7 @@ async function updatingDisplay(departure,index){
         return;
     }
     const line = departure.line.id;
+    console.log(line);
     const destination = departure.destination;
     const time = departure.display;
     display.textContent =`${line} ${destination} ${time}`;
@@ -64,6 +65,7 @@ async function displayingData(SITE_ID){
             }
         });
     }
+    console.log("hej");
 }
 
 function getTime(){
@@ -90,20 +92,25 @@ createJsonFromCSV(csvUrl)
 
 async function refresh(){
     const input = document.getElementById('searchInput').value;
-    
-    const index = dataForID.findIndex(item => item.name.toLowerCase() === input.toLowerCase());
+    let intervalId = null;
+    const index = dataForID.findIndex(item => item.name.toLowerCase() == input.toLowerCase());
     if(index !== -1){
+        const siteId = dataForID[index].id;
         myH1.textContent = input;
         console.log(`found at ${index} and the station id is ${dataForID[index].id}`);
         document.querySelectorAll('p').forEach(p => {
             p.classList.remove('hidden');
         });
         displayingData(dataForID[index].id);
+        if(intervalId) clearInterval(intervalId);
+        intervalId = setInterval(()=> displayingData(siteId),20000);
     }else{
         console.log("not found");
+        clearInterval(intervalId);
+        intervalId = null;
         myH1.textContent = `can't find ${input}`;
         document.querySelectorAll('p').forEach(p => {
             p.classList.add('hidden');
         });
-    }
+    }    
 }
