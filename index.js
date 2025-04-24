@@ -54,19 +54,20 @@ async function updatingDisplay(departure,index){
 }
 
 async function displayingData(SITE_ID){
-    //const metaRefresh = document.querySelector('meta[http-equiv="refresh"]');
-    if(true){
-        getTime();
-        fetchDepartures(SITE_ID)
-        .then(data =>{
-            buses = data;
-            for( let i = 0;i < 4; i++){
-                updatingDisplay(buses.departures[i],i);
-            }
-        });
+    getTime();
+    try{
+        const data = await fetchDepartures(SITE_ID);
+        if(data.departures.length <= 3) return false;
+        for( let i = 0;i < 4; i++){
+            updatingDisplay(data.departures[i],i);
+        }
+        return true;
+    }catch(error){
+        console.log(error);
+        return false;
     }
-    console.log("hej");
 }
+
 
 function getTime(){
     const now = new Date();
@@ -90,27 +91,29 @@ createJsonFromCSV(csvUrl)
         console.error("Error loading CSV data:", error);
     });
 
+const triedIds = new Set();
+
 async function refresh(){
-    const input = document.getElementById('searchInput').value;
-    let intervalId = null;
-    const index = dataForID.findIndex(item => item.name.toLowerCase() == input.toLowerCase());
-    if(index !== -1){
-        const siteId = dataForID[index].id;
-        myH1.textContent = input;
-        console.log(`found at ${index} and the station id is ${dataForID[index].id}`);
-        document.querySelectorAll('p').forEach(p => {
-            p.classList.remove('hidden');
-        });
-        displayingData(dataForID[index].id);
-        if(intervalId) clearInterval(intervalId);
-        intervalId = setInterval(()=> displayingData(siteId),20000);
-    }else{
-        console.log("not found");
-        clearInterval(intervalId);
-        intervalId = null;
-        myH1.textContent = `can't find ${input}`;
-        document.querySelectorAll('p').forEach(p => {
-            p.classList.add('hidden');
-        });
-    }    
+    const input = document.getElementById('searchInput').value.trim().toLowerCase();
+    const matches = dataForID.filter(item =>
+        item.name.toLowerCase() === input ||
+        item.fullName.toLowerCase() === `${input} t-bana`
+    );
+    for (const station of matches) {
+        if (triedIds.has(station.id)) continue;
+        triedIds.add(station.id);
+    
+        console.log(`trying id=${station.id}`);
+        const hasData = await displayingData(station.id);  // will now be true/false
+
+        if (hasData) {
+        myH1.textContent = station.name;
+        document.querySelectorAll('p').forEach(p => p.classList.remove('hidden'));
+        console.log("found");
+        return;
+        }
+    }
+    myH1.textContent = `Couldn't find live data for "${input}"`;
+    document.querySelectorAll('p').forEach(p => p.classList.add('hidden'));
 }
+// de gamla intervalet värkar vara kvards
