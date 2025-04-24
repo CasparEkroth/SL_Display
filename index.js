@@ -92,9 +92,18 @@ createJsonFromCSV(csvUrl)
     });
 
 const triedIds = new Set();
-
+let refreshTimer = null;
+let lastInput = ";"
 async function refresh(){
     const input = document.getElementById('searchInput').value.trim().toLowerCase();
+    if(input !== lastInput){
+        lastInput = input;
+        triedIds.clear();
+        if(refreshTimer){
+            clearInterval(refreshTimer);
+            refreshTimer = null;
+        }
+    }
     const matches = dataForID.filter(item =>
         item.name.toLowerCase() === input ||
         item.fullName.toLowerCase() === `${input} t-bana`
@@ -110,6 +119,9 @@ async function refresh(){
         myH1.textContent = station.name;
         document.querySelectorAll('p').forEach(p => p.classList.remove('hidden'));
         console.log("found");
+        if(!refreshTimer){
+            refreshTimer = setInterval( () => displayingData(station.id),20000);
+        }
         return;
         }
     }
