@@ -5,10 +5,9 @@ const csvUrl = 'https://raw.githubusercontent.com/thuma/StorstockholmsLokaltrafi
 
 async function search() {
     const exports = await getWasmExports();
-    // now you can call exports.add(), exports.scale(), etc.
+
     const result = exports.add(2, 3);
     console.log('2 + 3 =', result);
-    //document.getElementById('result').textContent = result;
 }
 search();
 
