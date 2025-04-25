@@ -106,7 +106,9 @@ async function refresh(){
     }
     const matches = dataForID.filter(item =>
         item.name.toLowerCase() === input ||
-        item.fullName.toLowerCase() === `${input} t-bana`
+        item.fullName.toLowerCase() === `${input} t-bana` ||
+        item.fullName.toLowerCase() === input ||
+        item.name.toLowerCase() === `${input} station`
     );
     for (const station of matches) {
         if (triedIds.has(station.id)) continue;
