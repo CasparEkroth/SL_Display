@@ -1,5 +1,16 @@
+import { getWasmExports } from './wasm-loader.js';
+
 const myH1 = document.getElementById("myH1");
 const csvUrl = 'https://raw.githubusercontent.com/thuma/StorstockholmsLokaltrafikAPI/master/sl.csv';
+
+async function search() {
+    const exports = await getWasmExports();
+    // now you can call exports.add(), exports.scale(), etc.
+    const result = exports.add(2, 3);
+    console.log('2 + 3 =', result);
+    //document.getElementById('result').textContent = result;
+}
+search();
 
 async function createJsonFromCSV(url){
     try {
@@ -130,4 +141,3 @@ async function refresh(){
     myH1.textContent = `Couldn't find live data for "${input}"`;
     document.querySelectorAll('p').forEach(p => p.classList.add('hidden'));
 }
-// de gamla intervalet värkar vara kvards
