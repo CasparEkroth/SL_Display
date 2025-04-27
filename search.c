@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define STATION_NAME_LEN 50
+#define STATION_NAME_LEN 64
 #define MAX_MATCHES 20
-#define COUNT_RETURN_STATIONS 10
+#define COUNT_RETURN_STATIONS 5
 
 typedef struct{
     char *stationId;
@@ -12,18 +12,49 @@ typedef struct{
 }ListScore;
 
 ListScore* match(char *input, char **list, int count);
-ListScore* score(char *input, char matches[][STATION_NAME_LEN]);
 static void destroyListScore(ListScore* matches,int count);
+void merge(ListScore *matches, int left, int mid, int right);
+void divideAndConquer(ListScore *matches, int left, int right);
 
 
 char** fuzzySearch(char* input, char **list, int count){
     ListScore *matches ={0};
-    //match letter in order but not exact 
     matches = match(input,list,count);
-    //how "good" was the match is (closer = better)
-    //list = score(input,matches);
-    //sort = best matches first
+    if(matches == NULL) return NULL; 
 
+    divideAndConquer(matches,0,count-1);
+    char **topScore = malloc(COUNT_RETURN_STATIONS * sizeof(char *));
+    if(!topScore) return NULL;
+
+     int realCount = count < COUNT_RETURN_STATIONS ? count : COUNT_RETURN_STATIONS;
+
+    for (int i = 0; i < realCount; i++){
+        const char *src = matches[count - 1 - i].stationId;
+        topScore[i] = strdup(src);
+        if(!topScore[i]){
+            while (i--) free(topScore[i]);
+            free(topScore);
+            return NULL;
+        }
+    }
+    for (int i = realCount; i < COUNT_RETURN_STATIONS; i++){
+        topScore[i] = strdup("");
+        if (!topScore[i]) {
+            while (i--) free(topScore[i]);
+            free(topScore);
+            return NULL;
+        }
+    }
+    destroyListScore(matches,count);
+    return topScore;
+}
+
+void freeFuzzyResults(char **results) {
+    if (!results) return;
+    for (int i = 0; i < COUNT_RETURN_STATIONS; i++) {
+        free(results[i]);
+    }
+    free(results);
 }
 
 ListScore* match(char *input, char **list, int count){
@@ -54,17 +85,55 @@ static void destroyListScore(ListScore* matches,int count){
     free(matches);
 }
 
-ListScore* score(char *input, char matches[][STATION_NAME_LEN]){
-    ListScore list[COUNT_RETURN_STATIONS] = {0};
-
-    return list;
-}
-
-char** sort(ListScore *list){
+void merge(ListScore *matches, int left, int mid, int right){
+    int n1 = mid - left + 1; 
+    int n2 = right - mid;
+    ListScore *temp = malloc((n1 + n2) * sizeof(ListScore));
+    ListScore *L = temp;
+    ListScore *R = temp + n1;
+    // Deep copy data
+    for (int i = 0; i < n1; i++) {
+        L[i] = matches[left + i];
+        L[i].stationId = strdup(matches[left + i].stationId);
+    }
+    for (int j = 0; j < n2; j++) {
+        R[j] = matches[mid + 1 + j];
+        R[j].stationId = strdup(matches[mid + 1 + j].stationId);
+    }
+    // Merge the two temporary arrays back into array[left..right]
+    int i = 0, j = 0, k = left;
+    while (i < n1 && j < n2) {
+        if (L[i].score <= R[j].score) {
+            matches[k++] = L[i++];
+        } else {
+            matches[k++] = R[j++];
+        }
+    }
+    // Copy remaining elements
+    while (i < n1) {
+        matches[k++] = L[i++];
+    }
+    while (j < n2) {
+        matches[k++] = R[j++];
+    }
     
+    for (int i = 0; i < n1; i++){
+        free(L[i].stationId);
+    }
+    for (int j = 0; j < n2; j++){
+        free(R[j].stationId);
+    }
+    free(L);
+    free(R);
 }
 
-
-int add(int a, int b){
-    return (a + b);
+void divideAndConquer(ListScore *matches, int left, int right){
+    if (left < right){
+        int mid = left + (right - left) / 2; 
+        // Sort first and second halves
+        divideAndConquer(matches, left, mid);
+        divideAndConquer(matches, mid + 1, right);
+        // Merge the sorted halves
+        merge(matches, left, mid, right);
+    }
 }

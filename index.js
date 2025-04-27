@@ -1,15 +1,46 @@
-import { getWasmExports } from './wasm-loader.js';
+const COUNT_RETURN_STATIONS = 5;  
+
+import {
+    getWasm,
+    readPointerArray,
+    allocString,
+    allocStringArray
+} from "./wasm-loader.js";
 
 const myH1 = document.getElementById("myH1");
 const csvUrl = 'https://raw.githubusercontent.com/thuma/StorstockholmsLokaltrafikAPI/master/sl.csv';
 
-async function search() {
-    const exports = await getWasmExports();
 
-    const result = exports.add(2, 3);
-    console.log('2 + 3 =', result);
+async function runSearch(input, stationList) {
+    const { exports, memory } = await getWasm();
+    const { malloc, free, fuzzySearch, freeFuzzyResults } = exports;
+    const inPtr = allocString(memory, malloc, input);
+
+    const { arrayPtr, stringPtrs } = allocStringArray(memory, malloc, stationList);
+    const listCount = stationList.length;
+
+// Check the actual memory allocation for the string pointers
+console.log("Allocated Memory for Array:", arrayPtr);
+console.log("String Pointer Count:", stationList.length);
+
+    stationList.forEach(station => {
+        const strPtr = allocString(memory, malloc, station);
+        console.log("Allocated pointer for station:", strPtr);
+    });
+
+    const resultPtr = fuzzySearch(inPtr, arrayPtr, listCount);
+    if (!resultPtr) {
+        console.error("no matches");
+    } else {
+        const matches = readPointerArray(memory, resultPtr, COUNT_RETURN_STATIONS);
+        console.log("Top matches:", matches);
+        freeFuzzyResults(resultPtr);
+    }
+    stringPtrs.forEach(ptr => free(ptr));
+    free(arrayPtr);
+    free(inPtr);
 }
-search();
+
 
 async function createJsonFromCSV(url){
     try {
@@ -30,7 +61,7 @@ async function createJsonFromCSV(url){
                 lng: parseFloat(fields[8])
             };
         });
-        console.log(JSON.stringify(jsonData, null, 2));
+        //console.log(JSON.stringify(jsonData, null, 2));
         return jsonData;
     } catch (error) {
         console.error('Error fetching or processing CSV:', error);
@@ -140,3 +171,5 @@ async function refresh(){
     myH1.textContent = `Couldn't find live data for "${input}"`;
     document.querySelectorAll('p').forEach(p => p.classList.add('hidden'));
 }
+
+runSearch("Brom", ["Träkvista","Alvik","Brommaplan"]);
