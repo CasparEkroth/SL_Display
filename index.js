@@ -172,4 +172,4 @@ async function refresh(){
     document.querySelectorAll('p').forEach(p => p.classList.add('hidden'));
 }
 
-runSearch("Brom", ["Träkvista","Alvik","Brommaplan"]);
+runSearch("Trä", ["Träkvista","Alvik","Brommaplan"]);
